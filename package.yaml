@@ -1,0 +1,21 @@
+name:                hixen
+version:             0.1.0.0
+github:              "robkorn/hixen"
+license:             BSD3
+author:              "Robert Kornacki"
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/robkorn/hixen#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  dependencies:
+    - bytestring
+    - safe-exceptions
+    - wreq
+    - lens
