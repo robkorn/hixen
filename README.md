@@ -9,5 +9,5 @@ Currently supports:
 # Documentation
 After cloning the repository run the following command to generate documentation:
 ```
-stack haddock Hixen
+stack haddock hixen
 ```
