@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Hixen where
 
-import           Control.Exception.Safe     (tryAny)
-import           Control.Lens               ((^?))
-import qualified Data.ByteString.Lazy       as BSL
-import           Data.ByteString.Lazy.Char8 as BSLC
-import qualified Network.Wreq               as W
+import           Control.Exception.Safe      (tryAny)
+import           Control.Lens                ((^?))
+import qualified Data.ByteString.Lazy        as BSL
+import           Data.ByteString.Lazy.Char8  as BSLC
+import qualified Network.Wreq                as W
+import           Extra.Util.Func             (getRequestBody)
 
 type BidPrice = BSL.ByteString
 type EbayID = BSL.ByteString
@@ -13,16 +14,6 @@ type URL = BSL.ByteString
 
 -- | Record which holds the user's 'userName' and 'password'.
 data GixenAccount = GixenAccount { userName :: BSL.ByteString, password :: BSL.ByteString}
-
--- | Takes a 'URL' and returns the response body if the request was successful. Otherwise throws an error.
-getRequestBody :: URL -> IO BSL.ByteString
-getRequestBody url = do
-  req <- tryAny $ W.get $ unpack url
-  return $ case req of
-    Left e -> error "Get Request Failed."
-    Right resp -> case resp ^? W.responseBody of
-                    Just body -> body
-                    Nothing   -> error "Get Request Failed."
 
 -- | Returns currently registered snipes.
 getSnipeList :: GixenAccount -> IO BSL.ByteString

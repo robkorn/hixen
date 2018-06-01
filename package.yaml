@@ -19,3 +19,4 @@ library:
     - safe-exceptions
     - wreq
     - lens
+    - extra-util-func
