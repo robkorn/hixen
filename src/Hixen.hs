@@ -16,9 +16,10 @@ type URL = BSL.ByteString
 data GixenAccount = GixenAccount { userName :: BSL.ByteString, password :: BSL.ByteString}
 
 -- | Returns currently registered snipes.
-getSnipeList :: GixenAccount -> IO BSL.ByteString
-getSnipeList acc = getRequestBody composedURL
+getSnipeList :: GixenAccount -> IO [BSL.ByteString]
+getSnipeList acc = cleanup <$> getRequestBody composedURL
   where composedURL = BSL.concat ["https://www.gixen.com/api.php?username=", userName acc, "&password=", password acc, "&listsnipesmain=1"]
+        cleanup = fmap (BSLC.drop 6) . BSLC.lines . BSL.drop 12 . BSL.reverse . BSL.drop 37 . BSL.reverse
 
 -- | Attempts to create a snipe and returns the response.
 createSnipe :: GixenAccount -> BidPrice -> EbayID -> IO BSL.ByteString
