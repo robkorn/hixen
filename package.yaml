@@ -20,3 +20,4 @@ library:
     - wreq
     - lens
     - extra-util-func
+    - attoparsec
