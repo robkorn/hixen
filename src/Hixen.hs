@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Hixen where
 
 import           Control.Exception.Safe           (tryAny)
-import           Control.Lens                     ((^?))
+import           Control.Lens                     ((^?), (^.), makeLenses)
 import qualified Data.ByteString                  as BS
 import qualified Data.ByteString.Lazy             as BSL
 import           Data.ByteString.Lazy.Char8       as BSLC
@@ -15,32 +16,34 @@ type BidPrice = BSL.ByteString
 type EbayID = BSL.ByteString
 type URL = BSL.ByteString
 
--- | Record which holds the user's 'userName' and 'password'.
-data GixenAccount = GixenAccount { userName :: BSL.ByteString, password :: BSL.ByteString}
+-- | Datatype which holds the user's 'userName' and 'password'.
+data GixenAccount = GixenAccount { _userName :: BSL.ByteString, _password :: BSL.ByteString}
 
-
--- | Record which holds snipe data
-data Snipe = Snipe { auctionID :: BSL.ByteString,
-                     snipePrice :: BSL.ByteString,
-                     auctionTitle :: BSL.ByteString,
-                     status :: BSL.ByteString
+-- | Datatype which holds snipe data
+data Snipe = Snipe { _auctionID :: BSL.ByteString,
+                     _snipePrice :: BSL.ByteString,
+                     _auctionTitle :: BSL.ByteString,
+                     _status :: BSL.ByteString
                      } deriving (Show)
+
+makeLenses ''GixenAccount
+makeLenses ''Snipe
 
 -- | Attempts to create a snipe and returns the response.
 createSnipe :: GixenAccount -> BidPrice -> EbayID -> IO BSL.ByteString
 createSnipe acc bidPrice ebayID = getRequestBody composedURL
-  where composedURL = removeQuotes $ BSL.concat ["https://www.gixen.com/api.php?username=", userName acc, "&password=", password acc, "&itemid=", ebayID, "&maxbid=", bidPrice]
+  where composedURL = removeQuotes $ BSL.concat ["https://www.gixen.com/api.php?username=", acc ^. userName , "&password=", acc ^. password, "&itemid=", ebayID, "&maxbid=", bidPrice]
         removeQuotes = BSLC.filter (\c -> c /= '\"')
 
 -- | Attempts to delete a snipe and returns the response.
 deleteSnipe :: GixenAccount -> EbayID -> IO BSL.ByteString
 deleteSnipe acc ebayID = getRequestBody composedURL
-  where composedURL = BSL.concat ["https://www.gixen.com/api.php?username=", userName acc, "&password=", password acc, "&ditemid=", ebayID]
+  where composedURL = BSL.concat ["https://www.gixen.com/api.php?username=", acc ^. userName , "&password=", acc ^. password, "&ditemid=", ebayID]
 
 -- | Returns currently registered snipes.
 getSnipeList :: GixenAccount -> IO [Maybe Snipe]
 getSnipeList acc = fmap parseSnipeList $ cleanup <$> getRequestBody composedURL
-  where composedURL = BSL.concat ["https://www.gixen.com/api.php?username=", userName acc, "&password=", password acc, "&listsnipesmain=1"]
+  where composedURL = BSL.concat ["https://www.gixen.com/api.php?username=", acc ^. userName , "&password=", acc ^. password, "&listsnipesmain=1"]
         cleanup = fmap (BSL.toStrict . BSLC.drop 6) . BSLC.lines . BSL.drop 12 . BSL.reverse . BSL.drop 37 . BSL.reverse
         parseSnipeList = fmap (APC.maybeResult . APC.parse snipeParser)
 
@@ -51,10 +54,10 @@ snipeParser = do
   snipePrice <- priceParser
   status <- statusParser
   title <- titleParser
-  return $ Snipe { auctionID = fs snipeID,
-                   snipePrice = fs snipePrice,
-                   status = fs status,
-                   auctionTitle = fs title}
+  return $ Snipe { _auctionID = fs snipeID,
+                   _snipePrice = fs snipePrice,
+                   _status = fs status,
+                   _auctionTitle = fs title}
     where fs = BSL.fromStrict
 
 idParser :: APC.Parser BS.ByteString
